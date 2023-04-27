@@ -42,7 +42,7 @@ int main()
 			/* TODO: Error check to make sure the child was successfully created */
 			if (pid < 0) 
 			{
-            	std::cerr << "fork failed\n";
+            	std::cerr << "fork failed\n"; // previously perror("fork");
             	exit(EXIT_FAILURE);
         	}
 
