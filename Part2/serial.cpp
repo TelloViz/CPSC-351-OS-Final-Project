@@ -4,13 +4,22 @@
 #include <sys/types.h>
 
 int main() {
-    LocationReader reader("input.txt");
-    std::vector<Location> locations = reader.readLocations();
-    std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
+    // LocationReader reader("input.txt");
+    // std::vector<Location> locations = reader.readLocations();
+    // std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
 
-    for (const auto& loc : locations) {
-        std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
-    }
+    // for (const auto& loc : locations) {
+    //     std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
+    // }
+
+    std::cout << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
+
+    std::cout << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
+    if(getuid() == 0) std::cout << "Parent Proc User appears to be root user..." << std::endl;
+
+
+    std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
+    if(getgid() == 0) std::cout << "Parent Proc User Group appears to be primary user group..." << std::endl;
 
 /* TODO: Create a child */
     // fork a child process
@@ -33,11 +42,26 @@ int main() {
         * Also, please do not forget to error check your exelp() system calls.
         */
     else if (pid == 0) 
-    {        
-        for (const auto& coord : locations) 
-        {
-            // cycles through pairs of lat/long previously read from input.txt
-        }
+    {
+
+        std::cout << "\nFORK SUCCESSFUL..." << std::endl;
+
+        std::cout << "Child PID: " << getpid() << " reported by: " << getpid() << std::endl;
+        std::cout << "Parent PID: " << getppid()<< " reported by: " << getpid() << std::endl;
+
+        std::cout << "Child Proc User ID (UID): " << getuid() << std::endl;
+        
+        if(getuid() == 0) std::cout << "Child Proc User appears to be root user..." << std::endl;
+
+        std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
+        if(getgid() == 0) std::cout << "Child Proc User Group appears to be primary user group..." << std::endl;
+
+
+
+        // for (const auto& coord : locations) 
+        // {
+        //     // cycles through pairs of lat/long previously read from input.txt
+        // }
     } 
     
     /*** TODO: If I am a parent, I will do the following ***?
@@ -53,6 +77,7 @@ int main() {
             exit(EXIT_FAILURE);
         }
         std::cout << "child process exited with status " << status << std::endl;
+
     }
 
     return 0;
