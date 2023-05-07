@@ -4,13 +4,13 @@
 #include <sys/types.h>
 
 int main() {
-    // LocationReader reader("input.txt");
-    // std::vector<Location> locations = reader.readLocations();
-    // std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
+     LocationReader reader("input.txt");
+     std::vector<Location> locations = reader.readLocations();
+     std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
 
-    // for (const auto& loc : locations) {
-    //     std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
-    // }
+     for (const auto& loc : locations) {
+         std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
+     }
 
     std::cout << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
 
@@ -21,6 +21,10 @@ int main() {
     std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
     if(getgid() == 0) std::cout << "Parent Proc User Group appears to be primary user group..." << std::endl;
 
+auto iter = locations.begin();
+
+
+while(iter != locations.end()) {
 /* TODO: Create a child */
     // fork a child process
     pid_t pid = fork();			
@@ -56,12 +60,23 @@ int main() {
         std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
         if(getgid() == 0) std::cout << "Child Proc User Group appears to be primary user group..." << std::endl;
 
+        // call curl here
+        execlp(
+            "/usr/bin/curl", 
+            "curl", 
+            "-s", 
+            "-G", 
+            "--data-urlencode", 
+            "appid=YOUR_APP_ID_HERE", 
+            "--data-urlencode", 
+            iter->latitude, 
+            "--data-urlencode", 
+            iter->longitude, 
+            "https://api.openweathermap.org/data/2.5/weather", 
+            NULL
+        );
 
 
-        // for (const auto& coord : locations) 
-        // {
-        //     // cycles through pairs of lat/long previously read from input.txt
-        // }
     } 
     
     /*** TODO: If I am a parent, I will do the following ***?
@@ -79,6 +94,7 @@ int main() {
         std::cout << "child process exited with status " << status << std::endl;
 
     }
+}
 
     return 0;
 }

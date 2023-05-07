@@ -1,14 +1,11 @@
+#pragma once
+
 #include <iostream>
 #include <fstream>
 #include <sstream>
 #include <string>
 #include <vector>
-
-
-struct Location {
-    double latitude;
-    double longitude;
-};
+#include "location.h"
 
 class LocationReader {
 public:
