@@ -4,6 +4,7 @@
 #include <string>
 #include <vector>
 
+
 struct Location {
     double latitude;
     double longitude;
