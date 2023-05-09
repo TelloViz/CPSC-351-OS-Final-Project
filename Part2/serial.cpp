@@ -1,4 +1,5 @@
 #include "locationreader.h"
+#include "weatherapi.h"
 #include <iostream>
 #include <sys/wait.h>
 #include <sys/types.h>
@@ -52,23 +53,14 @@ while(iter < locations.end()) {
         std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
         std::cout << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
 
+        auto url = WeatherAPI::Get_Request_URL_String(*iter);
 
-        // // call curl here
-        // execlp(
-        //     "/usr/bin/curl", 
-        //     "curl", 
-        //     "-s", 
-        //     "-G", 
-        //     "--data-urlencode", 
-        //     "appid=YOUR_APP_ID_HERE", 
-        //     "--data-urlencode", 
-        //     iter->latitude, 
-        //     "--data-urlencode", 
-        //     iter->longitude, 
-        //     "https://api.openweathermap.org/data/2.5/weather", 
-        //     NULL
-        // );
-
+        // call curl here
+        execlp(
+            "/usr/bin/curl", 
+            "curl -v --silent",
+            url.c_str(),
+            NULL);
         
         exit(0);
 
@@ -87,7 +79,7 @@ while(iter < locations.end()) {
             std::cerr << "waitpid failed\n";
             exit(EXIT_FAILURE);
         }
-        std::cout << "child process exited with status " << status << std::endl;
+        std::cout << "\n\nchild process exited with status " << status << std::endl;
         iter++;
 
     }
