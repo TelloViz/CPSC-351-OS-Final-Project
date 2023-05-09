@@ -5,6 +5,7 @@
 #include <iostream>
 #include <string.h>
 #include <vector>
+#include <string>
 #include "location.h"
 
 #define MAX_BUF_SIZE 200
@@ -15,16 +16,9 @@ class WeatherAPI
 public:
 
     static std::string Get_Request_URL_String(Location location) 
-        {
-            char finalURLBuff[MAX_BUF_SIZE];
-            snprintf(
-                finalURLBuff, 
-                MAX_BUF_SIZE, 
-                "https://api.open-meteo.com/v1/forecast?latitude=%f&longitude=%f&current_weather=True", 
-                location.latitude, 
-                location.longitude
-                );
-            return finalURLBuff;
+        {            
+            std::cout << "\nWeatherAPI generated url: " << "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True" << std::endl << std::endl;
+            return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
         }
 
     using LocationIterator = std::vector<Location>::const_iterator;
