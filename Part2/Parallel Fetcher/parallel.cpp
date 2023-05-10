@@ -70,13 +70,36 @@ int main()
         std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
     }
 
+
+    int numForks = locations.size();
+    int currentForkCount = 0;
+    std::vector<pid_t> pidVec;
+
+    while( currentForkCount < numForks  )
+    {        
+        pid_t curr = fork();
+        if(curr < 0) 
+        {
+            std::cerr << "fork failed\n";
+            exit(EXIT_FAILURE);
+        }
+        else if(getpid() == 0) break;
+        else 
+        {
+            pidVec.push_back(curr);
+            ++currentForkCount;
+        }
+    }
+    
+
     auto iter = locations.begin();
 
     while (iter < locations.end())
     {
         ++file_counter;
-        // fork a child process
-        pid_t pid = fork();
+        
+        // // fork a child process
+        // pid_t pid = fork();
 
         // Error check to make sure the child was successfully created
         if (pid < 0)
