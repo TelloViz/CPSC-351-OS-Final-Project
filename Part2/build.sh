@@ -1,3 +1,3 @@
 #!/bin/bash
 clear
-g++ serial.cpp -o debugging && ./debugging
+g++ serial.cpp -o serial && ./serial
