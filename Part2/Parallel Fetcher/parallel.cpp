@@ -1,31 +1,124 @@
-// Serial Fetcher Requirements:
-// The serial fetcher shall be invoked as ./serial and fetch locations one by one. After the parent
-// process has read and parsed an entry from input.txt file, it shall proceed as follows:
+#include "locationreader.h"
+#include "weatherapi.h"
+#include <iostream>
+#include <sys/wait.h>
+#include <sys/types.h>
+#include "../../samples/json.hpp"
 
-// The parent process forks off a child process.
+using json = nlohmann::json;
 
-// The child will print it’s process ID (you can use getpid() system call to retrieve process’s
-// ID) and the process ID of it’s parent (you can use getppid() system call to do this).
+void printJSON(std::string filename)
+{
+    // Open the file
+    std::ifstream jsonFile(filename);
 
-// The child and parent should also print their UID using the getuid() and GID using the
-// getgid() system calls. Each process is assigned a UID and GID when it is launched.
+    // Could not open the file
+    if (!jsonFile.is_open())
+    {
+        std::cerr << "Could not open file " << filename << std::endl;
+        exit(1);
+    }
 
-// Typically, these are the same as the UID of the user who has launched the process and
-// the GID of that user’s default group. When the process accesses a file/directory, the OS
-// checks these process UID/GID values against the permissions of the file/directory to
-// enforce permissions.
+    // Parse the JSON file
+    json data = json::parse(jsonFile);
 
-// Based on this, do children inherit the user and group from the parent?
+    // Print the information
+    std::cerr << "This is the weather for latitude = " << data["latitude"];
 
-// The child uses execlp("/usr/bin/curl", "curl",... other arguments NULL) system
-// call in order to replace its program with curl program that will fetch the weather
-// information for the latitude/longitude location and save it in fileX.json where X represents
-// the location number. The first location will be saved in file named file1.json,
-// second in file2.json etc. You can check the file called numberedfilegen.cpp to see how
-// to dynamically generate names of files.
+    std::cerr << " and longitude = " << data["longitude"]
+              << std::endl;
 
-// The parent executes a wait() system call until the child exits.
-// The parent forks off another child process which downloads the next location specified in
-// input.txt.
+    std::cerr << "----------------------------------------------------------------" << std::endl;
 
-// Repeat the above steps until all files are downloaded.
+    std::cerr << "Currrent temperature: " << data["current_weather"]["temperature"]
+              << std::endl;
+
+    std::cerr << "Current windspeed: " << data["current_weather"]["windspeed"]
+              << std::endl;
+
+    std::cerr << "Current Wind direction: " << data["current_weather"]["winddirection"]
+              << std::endl;
+}
+
+void printChildProcInfo()
+{
+    std::cout << "\nFORK SUCCESSFUL..." << std::endl;
+    std::cout << "Child PID: " << getpid() << " reported by: " << getpid() << std::endl;
+    std::cout << "Parent PID: " << getppid() << " reported by: " << getpid() << std::endl;
+    std::cout << "Child Proc User ID (UID): " << getuid() << std::endl;
+    std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
+}
+
+void printParentProcInfo()
+{
+    std::cout << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
+    std::cout << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
+    std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
+}
+
+int main()
+{
+    int file_counter = 0;
+    LocationReader reader("input.txt");
+
+    std::vector<Location> locations = reader.readLocations();
+
+    std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
+
+    for (const auto &loc : locations)
+    {
+        std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
+    }
+
+    auto iter = locations.begin();
+
+    while (iter < locations.end())
+    {
+        ++file_counter;
+        // fork a child process
+        pid_t pid = fork();
+
+        // Error check to make sure the child was successfully created
+        if (pid < 0)
+        {
+            std::cerr << "fork failed\n"; // previously perror("fork");
+            exit(EXIT_FAILURE);
+        }
+        else if (pid == 0)
+        {
+            std::cout << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
+
+            std::string url = WeatherAPI::Get_Request_URL_String(*iter);
+
+            std::string filename("file" + std::to_string(file_counter) + ".json");
+            std::string curlQuery("-o " + filename);
+
+            std::cout << "Resulting in curl query: " << curlQuery << std::endl;
+
+            // call curl here
+            execlp(
+                "/usr/bin/curl",
+                "curl",
+                curlQuery.c_str(),
+                url.c_str(),
+                NULL);
+
+            exit(0);
+        }
+        else
+        {
+            // parent process
+            // wait for the child process to exit
+            int status;
+            if (waitpid(pid, &status, 0) < 0)
+            {
+                std::cerr << "waitpid failed\n";
+                exit(EXIT_FAILURE);
+            }
+            std::cout << "\n\nchild process " << pid << " exited with status " << status << std::endl;
+            iter++;
+        }
+    }
+
+    return 0;
+}
