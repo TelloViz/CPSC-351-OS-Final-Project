@@ -7,21 +7,25 @@
 #include <vector>
 #include "location.h"
 
-class LocationReader {
+class LocationReader
+{
 public:
-    LocationReader(const std::string& filename) : filename_(filename) {}
+    LocationReader(const std::string &filename) : filename_(filename) {}
 
-    std::vector<Location> readLocations() {
+    std::vector<Location> readLocations()
+    {
         std::vector<Location> locations;
         std::ifstream input(filename_);
 
-        if (!input) {
+        if (!input)
+        {
             std::cerr << "Error: Unable to open file " << filename_ << std::endl;
             return locations;
         }
 
         std::string line;
-        while (std::getline(input, line)) {
+        while (std::getline(input, line))
+        {
             Location loc;
             std::istringstream iss(line);
             iss >> loc.latitude >> loc.longitude;

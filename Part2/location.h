@@ -1,7 +1,7 @@
 #pragma once
 
-
-struct Location {    
+struct Location
+{
     double latitude;
     double longitude;
 };
