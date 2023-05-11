@@ -1,0 +1,120 @@
+LocationReader has read 5 locations...
+Latitude: 52.52, Longitude: 13.41
+Latitude: 48.8567, Longitude: 2.351
+Latitude: 40.4167, Longitude: -3.7033
+Latitude: 41.8955, Longitude: 12.4823
+Latitude: 50.4422, Longitude: 30.5367
+
+Parent PID: 4047 reported by: 4047
+Parent User ID (UID): 0 reported by: 4047
+Parent Group ID (GID): 0 reported by: 4047
+Child process, 4048 is set to work on location: 52.52, 13.41
+
+FORK SUCCESSFUL...
+Child PID: 4048 reported by: 4048
+Parent PID: 4047 reported by: 4048
+Child Proc User ID (UID): 0
+Child Proc Group User ID (GID): 0
+
+WeatherAPI generated url: https://api.open-meteo.com/v1/forecast?latitude=52.520000&longitude=13.410000&current_weather=True
+
+
+
+child process 4048 exited with status 0
+
+Child process, 4050 is set to work on location: 48.8567, 2.351
+
+FORK SUCCESSFUL...
+Child PID: 4050 reported by: 4050
+Parent PID: 4047 reported by: 4050
+Child Proc User ID (UID): 0
+Child Proc Group User ID (GID): 0
+
+WeatherAPI generated url: https://api.open-meteo.com/v1/forecast?latitude=48.856700&longitude=2.351000&current_weather=True
+
+
+
+child process 4048 exited with status 0
+
+
+
+child process 4050 exited with status 0
+
+Child process, 4052 is set to work on location: 40.4167, -3.7033
+
+FORK SUCCESSFUL...
+Child PID: 4052 reported by: 4052
+Parent PID: 4047 reported by: 4052
+Child Proc User ID (UID): 0
+Child Proc Group User ID (GID): 0
+
+WeatherAPI generated url: https://api.open-meteo.com/v1/forecast?latitude=40.416700&longitude=-3.703300&current_weather=True
+
+
+
+child process 4048 exited with status 0
+
+
+
+child process 4050 exited with status 0
+
+
+
+child process 4052 exited with status 0
+
+Child process, 4054 is set to work on location: 41.8955, 12.4823
+
+FORK SUCCESSFUL...
+Child PID: 4054 reported by: 4054
+Parent PID: 4047 reported by: 4054
+Child Proc User ID (UID): 0
+Child Proc Group User ID (GID): 0
+
+WeatherAPI generated url: https://api.open-meteo.com/v1/forecast?latitude=41.895500&longitude=12.482300&current_weather=True
+
+
+
+child process 4048 exited with status 0
+
+
+
+child process 4050 exited with status 0
+
+
+
+child process 4052 exited with status 0
+
+
+
+child process 4054 exited with status 0
+
+Child process, 4056 is set to work on location: 50.4422, 30.5367
+
+FORK SUCCESSFUL...
+Child PID: 4056 reported by: 4056
+Parent PID: 4047 reported by: 4056
+Child Proc User ID (UID): 0
+Child Proc Group User ID (GID): 0
+
+WeatherAPI generated url: https://api.open-meteo.com/v1/forecast?latitude=50.442200&longitude=30.536700&current_weather=True
+
+
+
+child process 4048 exited with status 0
+
+
+
+child process 4050 exited with status 0
+
+
+
+child process 4052 exited with status 0
+
+
+
+child process 4054 exited with status 0
+
+
+
+child process 4056 exited with status 0
+
