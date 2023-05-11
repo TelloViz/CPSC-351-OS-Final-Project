@@ -3,7 +3,7 @@
 #include <iostream>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include "../samples/json.hpp"
+#include "json.hpp"
 
 using json = nlohmann::json;
 
@@ -49,6 +49,15 @@ void printChildProcInfo()
     std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
 }
 
+
+std::string Get_Request_URL_String(Location location)
+{
+    std::cout << "\nWeatherAPI generated url: "
+                << "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True" << std::endl
+                << std::endl;
+    return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
+}
+
 int main()
 {
     int file_counter = 0;
@@ -84,18 +93,18 @@ int main()
         else if (pid == 0)
         {
             std::cout << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
+            printChildProcInfo();
 
-            std::string url = WeatherAPI::Get_Request_URL_String(*iter);
+            std::string url = Get_Request_URL_String(*iter);
 
             std::string filename("file" + std::to_string(file_counter) + ".json");
             std::string curlQuery("-o " + filename);
-
-            std::cout << "Resulting in curl query: " << curlQuery << std::endl;
 
             // call curl here
             execlp(
                 "/usr/bin/curl",
                 "curl",
+                "-s",
                 curlQuery.c_str(),
                 url.c_str(),
                 NULL);
@@ -112,7 +121,7 @@ int main()
                 std::cerr << "waitpid failed\n";
                 exit(EXIT_FAILURE);
             }
-            std::cout << "\n\nchild process " << pid << " exited with status " << status << std::endl;
+            std::cout << "\n\nchild process " << pid << " exited with status " << status << "\n\n";
             iter++;
         }
     }
