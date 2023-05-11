@@ -1,9 +1,9 @@
-#include "locationreader.h"
-#include "weatherapi.h"
 #include <iostream>
 #include <sys/wait.h>
 #include <sys/types.h>
-#include "../../samples/json.hpp"
+
+#include "json.hpp"
+#include "locationreader.h"
 
 using json = nlohmann::json;
 
@@ -56,57 +56,39 @@ void printParentProcInfo()
     std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
 }
 
+std::string Get_Request_URL_String(Location location)
+{
+    return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
+}
+
 int main()
 {
+    // Incremental value for file name generation
     int file_counter = 0;
+
+    // Init the locatoin reader
     LocationReader reader("input.txt");
 
+    // Read locations from file and store in vector for iteration
     std::vector<Location> locations = reader.readLocations();
 
-    std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
-
-    for (const auto &loc : locations)
-    {
-        std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
-    }
-
-
-// // Forking N children in a row as per assignment specification.
-//     int numForks = locations.size();
-//     int currentForkCount = 0;
-//     std::vector<pid_t> pidVec;
-
-//     while( currentForkCount < numForks  )
-//     {        
-//         pid_t curr = fork();
-//         if(curr < 0) 
-//         {
-//             std::cerr << "fork failed\n";
-//             exit(EXIT_FAILURE);
-//         }
-//         else if(getpid() == 0) break;
-//         else 
-//         {
-//             pidVec.push_back(curr);
-//             ++currentForkCount;
-//         }
-//     }
-    
-
+    // Init an iterator to the first location
     auto iter = locations.begin();
+
     // Stores information about events in the child (e.g., child termination/exit status)
-    int childEventInfo;	
-    
+    int childEventInfo;
+
     // The return value of execlp
     int execlpRetVal;
 
     // The return value of wait
-    int waitReturn; 
+    int waitReturn;
+
+    // Loop over each location previously loaded from input.txt
     while (iter < locations.end())
     {
+        // Increment counter for unique file naming generation.
         ++file_counter;
-        
-
 
         // fork a child process
         pid_t pid = fork();
@@ -119,72 +101,61 @@ int main()
         }
         else if (pid == 0)
         {
-            //std::cout << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
-
-            std::string url = WeatherAPI::Get_Request_URL_String(*iter);
+            // Build the query string
+            std::string url = Get_Request_URL_String(*iter);
             std::string filename("file" + std::to_string(file_counter) + ".json");
             std::string curlQuery("-o " + filename);
 
-            //std::cout << "Resulting in curl query: " << curlQuery << std::endl;
-
-            // call curl here
+            // Child calls curl with query string
             execlpRetVal = execlp(
                 "/usr/bin/curl",
                 "curl",
+                "-s",
                 curlQuery.c_str(),
                 url.c_str(),
                 NULL);
 
-            // This code is unreachable unless execlp has failed 
-            if(execlpRetVal < 0)
+            // execlp error handling
+            if (execlpRetVal < 0)
             {
                 perror("execlp");
                 exit(1);
             }
-            else exit(0);
+            else
+            {
+                // Child success
+                exit(0);
+            }
         }
         else
         {
-            // // parent process
-            // // wait for the child process to exit
-            // int status;
-            // if (waitpid(pid, &status, 0) < 0)
-            // {
-            //     std::cerr << "waitpid failed\n";
-            //     exit(EXIT_FAILURE);
-            // }
-            // std::cout << "\n\nchild process " << pid << " exited with status " << status << std::endl;
-
-
-
-
-            iter++;
+            // Next location, next fork
+            iter++; 
         }
     }
 
-    while(waitReturn = wait(&childEventInfo))
+    // After iterating through N locations in the previous loop, where it forked N children,
+    // the parent loops over wait() until each of the N children has finished its work.
+    while (waitReturn = wait(&childEventInfo))
     {
-        		// Sanity checks -- wait failed?
-		if(waitReturn < 0)
-		{
-			perror("wait");
-			exit(1);
-		}
+                // Handle wait() errors
+        if (waitReturn < 0)
+        {
+            perror("wait");
+            exit(1);
+        }
+        // If wait() was terminated by a child,
+        // check exit code for reason.
+        if (WIFEXITED(childEventInfo))
+        {
+            // Print the terminated child's process id
+            fprintf(stderr, "Parent: The child with pid=%d has terminated\n", waitReturn);
 
-        // If the reason why wait has stopped waiting
-		// was child termination (could be other reasns
-		// in practice!), let's print the child's exit status
-		// WIFEXITED macro checks the bits in the childEventInfo
-		// to see if the reason why the wait has stopped waiting
-		// was child termination
-		if(WIFEXITED(childEventInfo))
-		{
-			// Print the terminated child's process id
-			fprintf(stderr, "Parent: The child with pid=%d has terminated\n", waitReturn);
-			
-			// WEXITSTATUS extracts the child's exit code from the childEventInfo
-			fprintf(stderr, "Parent: The child's exit code is %d\n", WEXITSTATUS(childEventInfo));	
-		}
+            // WEXITSTATUS extracts the child's exit code from the childEventInfo
+            fprintf(stderr, "Parent: The child's exit code is %d\n", WEXITSTATUS(childEventInfo));
+        }
+
+
     }
 
     return 0;
