@@ -1,60 +1,15 @@
 #include <iostream>
+#include <fstream>
 #include <sys/wait.h>
 #include <sys/types.h>
 
 #include "json.hpp"
-#include "locationreader.h"
+//#include "locationreader.h"
+#include "location.h"
 
 using json = nlohmann::json;
 
-void printJSON(std::string filename)
-{
-    // Open the file
-    std::ifstream jsonFile(filename);
 
-    // Could not open the file
-    if (!jsonFile.is_open())
-    {
-        std::cerr << "Could not open file " << filename << std::endl;
-        exit(1);
-    }
-
-    // Parse the JSON file
-    json data = json::parse(jsonFile);
-
-    // Print the information
-    std::cerr << "This is the weather for latitude = " << data["latitude"];
-
-    std::cerr << " and longitude = " << data["longitude"]
-              << std::endl;
-
-    std::cerr << "----------------------------------------------------------------" << std::endl;
-
-    std::cerr << "Currrent temperature: " << data["current_weather"]["temperature"]
-              << std::endl;
-
-    std::cerr << "Current windspeed: " << data["current_weather"]["windspeed"]
-              << std::endl;
-
-    std::cerr << "Current Wind direction: " << data["current_weather"]["winddirection"]
-              << std::endl;
-}
-
-void printChildProcInfo()
-{
-    std::cout << "\nFORK SUCCESSFUL..." << std::endl;
-    std::cout << "Child PID: " << getpid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent PID: " << getppid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Child Proc User ID (UID): " << getuid() << std::endl;
-    std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
-}
-
-void printParentProcInfo()
-{
-    std::cout << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
-}
 
 std::string Get_Request_URL_String(Location location)
 {
@@ -66,15 +21,6 @@ int main()
     // Incremental value for file name generation
     int file_counter = 0;
 
-    // Init the locatoin reader
-    LocationReader reader("input.txt");
-
-    // Read locations from file and store in vector for iteration
-    std::vector<Location> locations = reader.readLocations();
-
-    // Init an iterator to the first location
-    auto iter = locations.begin();
-
     // Stores information about events in the child (e.g., child termination/exit status)
     int childEventInfo;
 
@@ -84,9 +30,25 @@ int main()
     // The return value of wait
     int waitReturn;
 
-    // Loop over each location previously loaded from input.txt
-    while (iter < locations.end())
+    std::string filename{"input.txt"};
+    std::ifstream inputFile;
+
+    inputFile.open(filename);
+
+    if (!inputFile.is_open())
     {
+        throw std::runtime_error("Failed to open the file.");
+    }
+
+    std::string line;
+
+    // Loop over each location previously loaded from input.txt
+    while (std::getline(inputFile, line))
+    {
+        Location loc;
+        std::istringstream iss(line);
+        iss >> loc.latitude >> loc.longitude;
+        
         // Increment counter for unique file naming generation.
         ++file_counter;
 
@@ -102,7 +64,7 @@ int main()
         else if (pid == 0)
         {
             // Build the query string
-            std::string url = Get_Request_URL_String(*iter);
+            std::string url = Get_Request_URL_String(loc);
             std::string filename("file" + std::to_string(file_counter) + ".json");
             std::string curlQuery("-o " + filename);
 
@@ -127,12 +89,9 @@ int main()
                 exit(0);
             }
         }
-        else
-        {
-            // Next location, next fork
-            iter++; 
-        }
     }
+
+    inputFile.close();
 
     // After iterating through N locations in the previous loop, where it forked N children,
     // the parent loops over wait() until each of the N children has finished its work.
@@ -154,8 +113,6 @@ int main()
             // WEXITSTATUS extracts the child's exit code from the childEventInfo
             fprintf(stderr, "Parent: The child's exit code is %d\n", WEXITSTATUS(childEventInfo));
         }
-
-
     }
 
     return 0;
