@@ -1,43 +1,20 @@
-#include "locationreader.h"
-#include <iostream>
 #include <sys/wait.h>
 #include <sys/types.h>
+
+#include <fstream>
+#include <iostream>
 #include "json.hpp"
 
 using json = nlohmann::json;
 
-void printJSON(std::string filename)
+
+struct Location
 {
-    // Open the file
-    std::ifstream jsonFile(filename);
+    double latitude;
+    double longitude;
+};
 
-    // Could not open the file
-    if (!jsonFile.is_open())
-    {
-        std::cerr << "Could not open file " << filename << std::endl;
-        exit(1);
-    }
 
-    // Parse the JSON file
-    json data = json::parse(jsonFile);
-
-    // Print the information
-    std::cerr << "This is the weather for latitude = " << data["latitude"];
-
-    std::cerr << " and longitude = " << data["longitude"]
-              << std::endl;
-
-    std::cerr << "----------------------------------------------------------------" << std::endl;
-
-    std::cerr << "Currrent temperature: " << data["current_weather"]["temperature"]
-              << std::endl;
-
-    std::cerr << "Current windspeed: " << data["current_weather"]["windspeed"]
-              << std::endl;
-
-    std::cerr << "Current Wind direction: " << data["current_weather"]["winddirection"]
-              << std::endl;
-}
 
 void printChildProcInfo()
 {
@@ -48,38 +25,41 @@ void printChildProcInfo()
     std::cerr << "Child Proc Group User ID (GID): " << getgid() << std::endl;
 }
 
-
 std::string Get_Request_URL_String(Location location)
 {
-    std::cerr << "\nWeatherAPI generated url: "
-                << "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True" << std::endl
-                << std::endl;
+    // std::cerr << "\nWeatherAPI generated url: "
+    //           << "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True" << std::endl
+    //           << std::endl;
     return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
 }
+
+
 
 int main()
 {
     int file_counter = 0;
-    LocationReader reader("input.txt");
 
-    std::vector<Location> locations = reader.readLocations();
+    std::string filename{"input.txt"};
+    std::ifstream inputFile;
 
-    std::cerr << "LocationReader has read " << locations.size() << " locations..." << std::endl;
+    inputFile.open(filename);
 
-    for (const auto &loc : locations)
+    if (!inputFile.is_open())
     {
-        std::cerr << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
+        throw std::runtime_error("Failed to open the file.");
     }
 
-    std::cerr << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
-    std::cerr << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
-    std::cerr << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
+    std::string line;
 
-    auto iter = locations.begin();
-
-    while (iter < locations.end())
+    // Loop over each location previously loaded from input.txt
+    while (std::getline(inputFile, line))
     {
+        Location loc;
+        std::istringstream iss(line);
+        iss >> loc.latitude >> loc.longitude;
+
         ++file_counter;
+
         // fork a child process
         pid_t pid = fork();
 
@@ -91,10 +71,10 @@ int main()
         }
         else if (pid == 0)
         {
-            std::cerr << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
+            //std::cerr << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
             printChildProcInfo();
 
-            std::string url = Get_Request_URL_String(*iter);
+            std::string url = Get_Request_URL_String(loc);
 
             std::string filename("file" + std::to_string(file_counter) + ".json");
             std::string curlQuery("-o " + filename);
@@ -121,9 +101,9 @@ int main()
                 exit(EXIT_FAILURE);
             }
             std::cerr << "\n\nchild process " << pid << " exited with status " << status << "\n\n";
-            iter++;
         }
     }
+    inputFile.close();
 
     return 0;
 }

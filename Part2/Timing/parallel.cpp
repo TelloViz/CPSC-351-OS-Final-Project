@@ -1,15 +1,18 @@
-#include <iostream>
-#include <fstream>
 #include <sys/wait.h>
 #include <sys/types.h>
 
+#include <iostream>
+#include <fstream>
+
 #include "json.hpp"
-//#include "locationreader.h"
-#include "location.h"
 
 using json = nlohmann::json;
 
-
+struct Location
+{
+    double latitude;
+    double longitude;
+};
 
 std::string Get_Request_URL_String(Location location)
 {
