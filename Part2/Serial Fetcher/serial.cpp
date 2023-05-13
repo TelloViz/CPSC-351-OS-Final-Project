@@ -1,5 +1,4 @@
 #include "locationreader.h"
-#include "weatherapi.h"
 #include <iostream>
 #include <sys/wait.h>
 #include <sys/types.h>
