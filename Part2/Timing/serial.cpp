@@ -41,17 +41,17 @@ void printJSON(std::string filename)
 
 void printChildProcInfo()
 {
-    std::cout << "\nFORK SUCCESSFUL..." << std::endl;
-    std::cout << "Child PID: " << getpid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent PID: " << getppid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Child Proc User ID (UID): " << getuid() << std::endl;
-    std::cout << "Child Proc Group User ID (GID): " << getgid() << std::endl;
+    std::cerr << "\nFORK SUCCESSFUL..." << std::endl;
+    std::cerr << "Child PID: " << getpid() << " reported by: " << getpid() << std::endl;
+    std::cerr << "Parent PID: " << getppid() << " reported by: " << getpid() << std::endl;
+    std::cerr << "Child Proc User ID (UID): " << getuid() << std::endl;
+    std::cerr << "Child Proc Group User ID (GID): " << getgid() << std::endl;
 }
 
 
 std::string Get_Request_URL_String(Location location)
 {
-    std::cout << "\nWeatherAPI generated url: "
+    std::cerr << "\nWeatherAPI generated url: "
                 << "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True" << std::endl
                 << std::endl;
     return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
@@ -64,16 +64,16 @@ int main()
 
     std::vector<Location> locations = reader.readLocations();
 
-    std::cout << "LocationReader has read " << locations.size() << " locations..." << std::endl;
+    std::cerr << "LocationReader has read " << locations.size() << " locations..." << std::endl;
 
     for (const auto &loc : locations)
     {
-        std::cout << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
+        std::cerr << "Latitude: " << loc.latitude << ", Longitude: " << loc.longitude << std::endl;
     }
 
-    std::cout << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
-    std::cout << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
+    std::cerr << "\nParent PID: " << getpid() << " reported by: " << getpid() << std::endl;
+    std::cerr << "Parent User ID (UID): " << getuid() << " reported by: " << getpid() << std::endl;
+    std::cerr << "Parent Group ID (GID): " << getgid() << " reported by: " << getpid() << std::endl;
 
     auto iter = locations.begin();
 
@@ -91,7 +91,7 @@ int main()
         }
         else if (pid == 0)
         {
-            std::cout << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
+            std::cerr << "Child process, " << getpid() << " is set to work on location: " << iter->latitude << ", " << iter->longitude << std::endl;
             printChildProcInfo();
 
             std::string url = Get_Request_URL_String(*iter);
@@ -120,7 +120,7 @@ int main()
                 std::cerr << "waitpid failed\n";
                 exit(EXIT_FAILURE);
             }
-            std::cout << "\n\nchild process " << pid << " exited with status " << status << "\n\n";
+            std::cerr << "\n\nchild process " << pid << " exited with status " << status << "\n\n";
             iter++;
         }
     }
