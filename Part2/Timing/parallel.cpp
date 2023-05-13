@@ -8,12 +8,14 @@
 
 using json = nlohmann::json;
 
+// convenience type for dealing with geocoordinate locations
 struct Location
 {
     double latitude;
     double longitude;
 };
 
+// Convenience function for building the query URL from given location.
 std::string Get_Request_URL_String(Location location)
 {
     return "https://api.open-meteo.com/v1/forecast?latitude=" + std::to_string(location.latitude) + "&longitude=" + std::to_string(location.longitude) + "&current_weather=True";
@@ -21,94 +23,93 @@ std::string Get_Request_URL_String(Location location)
 
 int main()
 {
-    // Incremental value for file name generation
-    int file_counter = 0;
+    
+    int childEventInfo;                                   // child termination/exit status)
+    
+    int execlpRetVal;                                     // The return value of execlp
+    
+    int waitReturn;                                       // The return value of wait
 
-    // Stores information about events in the child (e.g., child termination/exit status)
-    int childEventInfo;
+    int numLocations = 0;                                 // counter for file naming
+    
+    std::string filename{"input.txt"};                    // string for filename
 
-    // The return value of execlp
-    int execlpRetVal;
+    std::ifstream inputFile;                              // input file stream for reading file
 
-    // The return value of wait
-    int waitReturn;
+    inputFile.open(filename);                             // open file @filename w/ input stream
 
-    std::string filename{"input.txt"};
-    std::ifstream inputFile;
-
-    inputFile.open(filename);
-
-    if (!inputFile.is_open())
+    if (!inputFile.is_open())                             // catch file open failures
     {
-        throw std::runtime_error("Failed to open the file.");
+        throw std::runtime_error(
+            "Failed to open the file."
+            );
     }
-
-    std::string line;
-
-    // Loop over each location previously loaded from input.txt
-    while (std::getline(inputFile, line))
+    
+    std::string line;                                     // string to hold read lines
+    
+    while (std::getline(inputFile, line))                 // Loop over each location in file
     {
-        Location loc;
-        std::istringstream iss(line);
-        iss >> loc.latitude >> loc.longitude;
+        Location loc;                                     // location read from file
         
-        // Increment counter for unique file naming generation.
-        ++file_counter;
+        std::istringstream iss(line);                     // string stream to parse lines
+        
+        iss >> loc.latitude >> loc.longitude;             // parse the line 
+        
+        ++numLocations;                                   // increase location counter
 
-        // fork a child process
-        pid_t pid = fork();
-
-        // Error check to make sure the child was successfully created
-        if (pid < 0)
+        pid_t pid = fork();                               // fork a child process
+                                            
+        if (pid < 0)                                      // Error check to make sure the child was successfully created
         {
-            std::cerr << "fork failed\n"; // previously perror("fork");
+            std::cerr << "fork failed\n"; 
             exit(EXIT_FAILURE);
         }
-        else if (pid == 0)
+        else if (pid == 0)                                // Enter if child
         {
-            // Build the query string
-            std::string url = Get_Request_URL_String(loc);
-            std::string filename("file" + std::to_string(file_counter) + ".json");
-            std::string curlQuery("-o " + filename);
+            std::string url =                              // build URL for query
+                Get_Request_URL_String(loc);
+            
+            std::string filename(                          // build filename using incremented counter     
+                "file" + 
+                std::to_string(numLocations) + 
+                ".json"
+                );
 
-            // Child calls curl with query string
-            execlpRetVal = execlp(
-                "/usr/bin/curl",
-                "curl",
-                "-s",
-                curlQuery.c_str(),
-                url.c_str(),
-                NULL);
+            std::string curlQuery("-o " + filename);       // prep our curl arg            
+            
+            int execlpRetVal =                             // returned value of execlp
+                                execlp(                    // call curl with url, filename, and curlQuery
+                                "/usr/bin/curl",           // curl system directory location
+                                "curl",                    // curl command
+                                "-s",                      // silence extra output from curl
+                                curlQuery.c_str(),         // prebuilt query string
+                                url.c_str(),               // prebuilt url string
+                                NULL                       // end of args
+                                    );
 
-            // execlp error handling
-            if (execlpRetVal < 0)
+            if (execlpRetVal < 0)                          // execlp error handling
             {
                 perror("execlp");
                 exit(1);
             }
-            else
+            else                                           // Child success
             {
-                // Child success
                 exit(0);
             }
         }
     }
 
-    inputFile.close();
+    inputFile.close();                                    // close input file
 
-    // After iterating through N locations in the previous loop, where it forked N children,
-    // the parent loops over wait() until each of the N children has finished its work.
-    while (waitReturn = wait(&childEventInfo))
-    {
-                // Handle wait() errors
-        if (waitReturn < 0)
+    while (waitReturn = wait(&childEventInfo))            // parent loops on wait
+    {            
+        if (waitReturn < 0)                               // Handle wait() errors
         {
             perror("wait");
             exit(1);
         }
-        // If wait() was terminated by a child,
-        // check exit code for reason.
-        if (WIFEXITED(childEventInfo))
+
+        if (WIFEXITED(childEventInfo))                    // check child-terminated wait exit status
         {
             // Print the terminated child's process id
             fprintf(stderr, "Parent: The child with pid=%d has terminated\n", waitReturn);
