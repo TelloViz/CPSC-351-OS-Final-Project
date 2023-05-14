@@ -61,10 +61,9 @@ sys  |  0m0.030s
 
 Type | Time
 -----|-----
-real | 0m2.040s
-user |  0m0.307s
-sys  |  0m0.030s
-
+real |  0m0.457s
+user |  0m0.339s
+sys  |  0m0.010s
 
 ## Time Analysis of Parallel vs. Serial Fetchers
  
