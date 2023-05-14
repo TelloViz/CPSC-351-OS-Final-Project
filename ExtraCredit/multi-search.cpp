@@ -139,9 +139,8 @@ void ParentAnnounce(pid_t childPid, const std::string& str, const std::string& k
 
     std::cout << convertedStr                                       // Finish reporting child source and target strings.
                 << "\" for " << key << "\n\n";
+
 }
-
-
 
 int main(int argc, char *argv[])
 {
@@ -261,5 +260,8 @@ int main(int argc, char *argv[])
                   << " killed...\n";
     }
 
+    std::cout << "\n\nNOTE: Invisible symbols have been replaced for printing visibility only... "
+                << "\nThe original data remains unchanged.\n\n";
+        
     return 0;
 }
