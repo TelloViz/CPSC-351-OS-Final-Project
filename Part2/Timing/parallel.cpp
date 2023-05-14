@@ -40,9 +40,8 @@ int main()
 
     if (!inputFile.is_open())                             // catch file open failures
     {
-        throw std::runtime_error(
-            "Failed to open the file."
-            );
+        std::cerr << "Failed to open the file: " << filename << std::endl;
+        return 1;
     }
     
     std::string line;                                     // string to hold read lines
@@ -66,6 +65,7 @@ int main()
         }
         else if (pid == 0)                                // Enter if child
         {
+
             std::string url =                              // build URL for query
                 Get_Request_URL_String(loc);
             
@@ -87,29 +87,29 @@ int main()
                                 NULL                       // end of args
                                     );
 
+            
             if (execlpRetVal < 0)                          // execlp error handling
             {
                 perror("execlp");
                 exit(1);
             }
-            else                                           // Child success
-            {
-                exit(0);
-            }
         }
     }
 
     inputFile.close();                                    // close input file
-
-    while (waitReturn = wait(&childEventInfo))            // parent loops on wait
-    {            
-        if (waitReturn < 0)                               // Handle wait() errors
+   
+    do                                                    // parent loops on wait
+    {   
+        waitReturn = wait(&childEventInfo);
+        if (waitReturn < 0                               // if there's a wait error
+            && errno != ECHILD)                          // and its not a "No More Children" error...
         {
-            perror("wait");
-            exit(1);
+            perror("Waiting error!");                    // signal the error
+            exit(1);                                     // terminate with error code
         }
-
-        if (WIFEXITED(childEventInfo))                    // check child-terminated wait exit status
+        else if(waitReturn < 0 && errno == ECHILD) std::cerr << "All children have been waited for...\n";
+        
+        if (errno != ECHILD && WIFEXITED(childEventInfo))                    // If child terminated normally
         {
             // Print the terminated child's process id
             fprintf(stderr, "Parent: The child with pid=%d has terminated\n", waitReturn);
@@ -117,7 +117,8 @@ int main()
             // WEXITSTATUS extracts the child's exit code from the childEventInfo
             fprintf(stderr, "Parent: The child's exit code is %d\n", WEXITSTATUS(childEventInfo));
         }
-    }
+
+    }while (waitReturn > 0);
 
     return 0;
 }

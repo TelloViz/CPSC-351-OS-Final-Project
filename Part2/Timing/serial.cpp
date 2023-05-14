@@ -53,9 +53,8 @@ int main()
 
     if (!inputFile.is_open())                             // catch file open failures
     {
-        throw std::runtime_error(
-            "Failed to open the file."
-            );
+        std::cerr << "Failed to open the file: " << filename << std::endl;
+        return 1;
     }
     
     std::string line;                                     // string to hold read lines
@@ -108,24 +107,28 @@ int main()
                 perror("execlp");
                 exit(1);
             }
-            else                                           // Child success
-            {
-                exit(0);
-            }
         }
         else                                              // parent process
         {
             int status;                                   // child exit status
-            
-            if (waitpid(pid, &status, 0) < 0)             // catch wait errors
+            int waitReturn;
+            int childEventInfo;                           // child termination/exit status)
+            waitReturn = waitpid(pid, &status, 0);        // catch wait errors
+
+            if (waitReturn < 0)                               // Handle wait() errors
             {
-                std::cerr << "waitpid failed\n";
-                exit(EXIT_FAILURE);
+                perror("wait");
+                exit(1);                                     // Terminate program if wait fails            
             }
 
-            std::cerr << "\n\nchild process "             // report child exit status
-                << pid << " exited with status " 
-                << status << "\n\n";
+            if (WIFEXITED(childEventInfo))                    // check child-terminated wait exit status
+            {
+                // Print the terminated child's process id
+                fprintf(stderr, "Parent: The child with pid=%d has terminated\n", waitReturn);
+
+                // WEXITSTATUS extracts the child's exit code from the childEventInfo
+                fprintf(stderr, "Parent: The child's exit code is %d\n", WEXITSTATUS(childEventInfo));
+            }
         }
     }
 
