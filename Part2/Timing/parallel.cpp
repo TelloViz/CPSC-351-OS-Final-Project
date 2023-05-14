@@ -1,3 +1,7 @@
+// CPSC 351 : OS Final Project
+// Written by Joshua Lollis
+// Last updated 5/13/23
+
 #include <sys/wait.h>
 #include <sys/types.h>
 
