@@ -57,7 +57,7 @@ real | 0m2.040s
 user |  0m0.307s
 sys  |  0m0.030s
 
-#### Serial Times
+### Parallel Times
 
 Type | Time
 -----|-----
